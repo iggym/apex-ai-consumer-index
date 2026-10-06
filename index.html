@@ -338,6 +338,47 @@
     .disclosure { padding: 26px 0 31px; color: rgba(247,247,241,.38); background: var(--dark); border-top: 1px solid rgba(247,247,241,.11); }
     .disclosure p { max-width: 1050px; margin: 0; font-size: 9px; line-height: 1.7; }
 
+    /* Editorial Visual Plates & Premium Gallery */
+    .editorial-plate { margin: 54px 0 0; padding: 0; border: 1px solid var(--line); background: rgba(255,255,255,.55); position: relative; }
+    .editorial-plate.standalone { margin: 48px auto 0; }
+    .editorial-plate.dark-plate { border-color: rgba(247,247,241,.18); background: rgba(255,255,255,.025); }
+    .plate-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 22px; border-bottom: 1px solid var(--line); background: rgba(20,22,17,.03); }
+    .dark-plate .plate-header { border-bottom-color: rgba(247,247,241,.14); background: rgba(255,255,255,.02); }
+    .plate-tag { display: inline-flex; align-items: center; gap: 12px; }
+    .plate-index { display: inline-grid; place-items: center; padding: 3px 8px; background: var(--ink); color: var(--paper); font: 700 9px/1 var(--mono); letter-spacing: .08em; }
+    .plate-index.violet { background: var(--violet); color: var(--white); }
+    .plate-index.acid { background: var(--acid); color: var(--ink); }
+    .plate-index.orange { background: var(--orange); color: var(--white); }
+    .plate-meta { color: var(--muted); font: 9px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+    .dark-plate .plate-meta { color: rgba(247,247,241,.52); }
+    .plate-media { position: relative; overflow: hidden; background: #0c0e0b; cursor: zoom-in; }
+    .plate-media img { display: block; width: 100%; height: auto; max-height: 580px; object-fit: cover; object-position: center; transition: transform .7s var(--ease), filter .7s ease; }
+    .editorial-plate:hover .plate-media img { transform: scale(1.015); filter: contrast(1.02); }
+    .plate-enlarge-hint { position: absolute; right: 16px; bottom: 16px; display: inline-flex; align-items: center; gap: 7px; padding: 6px 11px; border: 1px solid rgba(255,255,255,.2); background: rgba(20,22,17,.75); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); color: var(--white); font: 8px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; pointer-events: none; transition: opacity .2s, transform .2s; opacity: .85; }
+    .editorial-plate:hover .plate-enlarge-hint { opacity: 1; transform: translateY(-2px); }
+    .plate-caption { display: grid; grid-template-columns: minmax(0,1.4fr) minmax(230px,.6fr); gap: 28px; padding: 22px; border-top: 1px solid var(--line); background: var(--paper); }
+    .dark-plate .plate-caption { border-top-color: rgba(247,247,241,.14); background: #181b15; color: var(--white); }
+    .plate-caption-text { font-size: 13.5px; line-height: 1.6; color: #43463f; }
+    .dark-plate .plate-caption-text { color: rgba(247,247,241,.8); }
+    .plate-caption-text strong { color: var(--ink); font-weight: 600; }
+    .dark-plate .plate-caption-text strong { color: var(--white); }
+    .plate-caption-aside { display: flex; flex-direction: column; justify-content: space-between; align-items: flex-end; text-align: right; gap: 6px; color: var(--muted); font: 8.5px/1.55 var(--mono); letter-spacing: .05em; text-transform: uppercase; border-left: 1px solid var(--line); padding-left: 22px; }
+    .dark-plate .plate-caption-aside { color: rgba(247,247,241,.45); border-left-color: rgba(247,247,241,.14); }
+    .plate-caption-aside span:first-child { font-weight: 600; color: var(--ink); }
+    .dark-plate .plate-caption-aside span:first-child { color: var(--acid); }
+
+    /* Lightbox Modal */
+    .plate-lightbox { position: fixed; inset: 0; z-index: 100; display: none; place-items: center; padding: clamp(16px,4vw,40px); background: rgba(15,17,13,.92); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); opacity: 0; transition: opacity .25s ease; }
+    .plate-lightbox.is-open { display: grid; opacity: 1; }
+    .lightbox-frame { position: relative; max-width: min(1200px,94vw); max-height: 92vh; display: flex; flex-direction: column; background: #141611; border: 1px solid rgba(247,247,241,.2); box-shadow: 0 25px 70px rgba(0,0,0,.7); }
+    .lightbox-img-wrap { overflow: auto; max-height: 74vh; display: grid; place-items: center; background: #0c0e0a; }
+    .lightbox-img-wrap img { display: block; max-width: 100%; max-height: 74vh; object-fit: contain; }
+    .lightbox-bar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 20px; border-top: 1px solid rgba(247,247,241,.14); color: var(--white); }
+    .lightbox-info { font-size: 12px; color: rgba(247,247,241,.78); max-width: 800px; }
+    .lightbox-info strong { color: var(--acid); }
+    .lightbox-close { min-height: 32px; padding: 0 14px; border: 1px solid rgba(247,247,241,.25); background: transparent; color: var(--white); font: 9px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; cursor: pointer; transition: all .2s; }
+    .lightbox-close:hover { background: var(--acid); color: var(--ink); border-color: var(--acid); }
+
     /* Scroll reveal, motion, and interaction polish */
     .js .reveal { opacity: 0; transform: translateY(24px); transition: opacity .8s var(--ease), transform .8s var(--ease); }
     .js .reveal.is-visible { opacity: 1; transform: translateY(0); }
@@ -442,6 +483,13 @@
       .closing-meta { align-items: flex-start; flex-direction: column; margin-top: 75px; }
       .footer-links { flex-wrap: wrap; }
       .cursor-glow { display: none; }
+      .editorial-plate { margin: 38px 0 0; }
+      .plate-header { flex-direction: column; align-items: flex-start; gap: 8px; padding: 12px 16px; }
+      .plate-caption { grid-template-columns: 1fr; gap: 14px; padding: 16px; }
+      .plate-caption-aside { align-items: flex-start; text-align: left; border-left: 0; border-top: 1px solid var(--line); padding-left: 0; padding-top: 12px; }
+      .dark-plate .plate-caption-aside { border-top-color: rgba(247,247,241,.14); }
+      .lightbox-bar { flex-direction: column; align-items: stretch; gap: 12px; padding: 12px 15px; }
+      .lightbox-close { width: 100%; }
     }
     @media (max-width: 430px) {
       :root { --page: calc(100% - 30px); }
@@ -559,6 +607,32 @@
       <div class="hero-bottom"><a class="scroll-cue" href="#depth"><span>Scroll to explore</span><span>↓</span></a><span class="small-note">OBSERVED SPENDING IS A PANEL, NOT A CENSUS.</span></div>
     </section>
 
+    <div class="page-width reveal" style="padding-top: 10px;">
+      <figure class="editorial-plate standalone" aria-label="Visual plate 01: Macro Topography of Consumer Generative AI">
+        <div class="plate-header">
+          <div class="plate-tag">
+            <span class="plate-index violet">FIG. 01</span>
+            <span class="eyebrow" style="margin:0">MACRO TOPOGRAPHY / 7TH EDITION</span>
+          </div>
+          <span class="plate-meta">FOUNDATION TRIARCHY &bull; EXPONENTIAL CURVES &bull; AGENT MIGRATION</span>
+        </div>
+        <div class="plate-media" tabindex="0" role="button" aria-label="Enlarge Fig 01: Macro Topography">
+          <img src="assets/images/apex-hero-banner.png" alt="Apex AI Consumer Index Macro Topography showing foundational LLMs and market trajectories" loading="eager" />
+          <span class="plate-enlarge-hint" aria-hidden="true"><span>⤢</span><span>Inspect plate</span></span>
+        </div>
+        <figcaption class="plate-caption">
+          <div class="plate-caption-text">
+            <strong>The Three-Headed Colossus and the Converging Frontier:</strong> Across 127 product launches in six months, ChatGPT, Claude, and Gemini have partitioned consumer AI into three distinct strategic theaters. As raw prompt volume matures, the next frontier is defined by exponential power-law spend, proprietary creative models, and autonomous personal agents.
+          </div>
+          <div class="plate-caption-aside">
+            <span>A16Z ISSUE 07 ARCHIVE</span>
+            <span>SIMILARWEB &bull; SENSOR TOWER &bull; YIPITDATA</span>
+            <span>OCTOBER 2026 DISPATCH</span>
+          </div>
+        </figcaption>
+      </figure>
+    </div>
+
     <section class="section depth-section page-width" id="depth" aria-labelledby="depthTitle">
       <div class="section-head-row reveal">
         <div>
@@ -654,6 +728,31 @@
             <div><strong>4.5%</strong><span>of panel consumers paid for a leading assistant</span></div>
           </div>
         </div>
+
+        <figure class="editorial-plate dark-plate reveal" style="margin-top: 48px;" aria-label="Visual plate 02: Visualizing the Power-Law Divide between casual shallows and whale spenders">
+          <div class="plate-header">
+            <div class="plate-tag">
+              <span class="plate-index acid">FIG. 02</span>
+              <span class="eyebrow" style="margin:0;color:var(--acid)">THE WHALE TRENCH / CAPITAL CONCENTRATION</span>
+            </div>
+            <span class="plate-meta">SHALLOW LAGOON (4.5% SUBS) VS. $903/MO CYBERNETIC ABYSS</span>
+          </div>
+          <div class="plate-media" tabindex="0" role="button" aria-label="Enlarge Fig 02: The Whale Trench">
+            <img src="assets/images/power-law-divide.png" alt="Editorial illustration of the consumer AI divide: casual surface shallows vs deep prosumer whale trench" loading="lazy" />
+            <span class="plate-enlarge-hint" aria-hidden="true"><span>⤢</span><span>Inspect plate</span></span>
+          </div>
+          <figcaption class="plate-caption">
+            <div class="plate-caption-text">
+              <strong>An Ocean Wide, An Ankle Deep:</strong> While half of U.S. consumers casually test the waters, only 4.5% maintain a personal subscription. Down in the illuminated abyss, the top 1% power elite accounts for 19.5% of all consumer AI spend—dropping an average of $903/month on consumer plastic for automation pipelines (n8n, fal, Manus) and creative generation suites (HeyGen, Figma, Higgsfield).
+            </div>
+            <div class="plate-caption-aside">
+              <span>YIPITDATA E-RECEIPT PANEL</span>
+              <span>TOP 1% EXPANDED +80% IN 18 MO</span>
+              <span>MEDIAN SPEND FLAT AT $25/MO</span>
+            </div>
+          </figcaption>
+        </figure>
+
         <p class="spend-caveat">YIPITDATA U.S. PANELS · FIGURES ARE PANEL-BASED AND SHOULD NOT BE READ AS CENSUS OR TOTAL COMPANY REVENUE. THE TOP-1% / MEDIAN COMPARISON IS ACROSS DIFFERENT SPENDER COHORTS.</p>
       </div>
     </section>
@@ -806,6 +905,31 @@
             <div><strong>n = 1,502</strong><span>people across early agent user chats</span></div>
           </div>
         </div>
+
+        <figure class="editorial-plate dark-plate reveal" style="margin-top: 48px;" aria-label="Visual plate 03: Personal Autonomous Agents and Startup Moats">
+          <div class="plate-header">
+            <div class="plate-tag">
+              <span class="plate-index orange">FIG. 03</span>
+              <span class="eyebrow" style="margin:0;color:var(--orange)">THE CONCIERGE HIGHWAY / COMMERCE-FIRST AGENTS</span>
+            </div>
+            <span class="plate-meta">TEXT-TO-TRANSACTION RAILS &bull; DAVID VS. GOLIATH MOATS</span>
+          </div>
+          <div class="plate-media" tabindex="0" role="button" aria-label="Enlarge Fig 03: The Concierge Highway">
+            <img src="assets/images/agent-frontier.png" alt="Editorial tech illustration of personal agents booking transactions in chat and nimble startups outmaneuvering incumbents" loading="lazy" />
+            <span class="plate-enlarge-hint" aria-hidden="true"><span>⤢</span><span>Inspect plate</span></span>
+          </div>
+          <figcaption class="plate-caption">
+            <div class="plate-caption-text">
+              <strong>From Terminal Relics to Silky Whispers:</strong> Personal assistants have broken free from the developer shell. Viral agents like Instinct demonstrate a 40% card-link rate and $1,300/mo transacting spend inside iMessage, while Meta Muse logs 5M downloads. As platform monoliths build walled gardens, nimble startups carve durable moats with multi-model agility, proprietary fine-tunes, and dedicated hardware.
+            </div>
+            <div class="plate-caption-aside">
+              <span>ASSISTANTBENCHMARK &bull; DISPATCHES</span>
+              <span>INSTINCT &bull; MUSE &bull; GROK &bull; DOTS</span>
+              <span>SMS &bull; WHATSAPP &bull; BROWSER</span>
+            </div>
+          </figcaption>
+        </figure>
+
         <p class="agent-caveat">AGENT ADOPTION AND TRANSACTION FIGURES ARE REPORTED IN THE ARTICLE, INCLUDING FOUNDER CLAIMS. EARLY-USER GROUPS ARE NOT REPRESENTATIVE OF THE GENERAL POPULATION. MUSE / THREADS TIME WINDOWS DIFFER.</p>
       </div>
     </section>
@@ -863,6 +987,18 @@
       </div>
     </section>
   </main>
+
+  <div class="plate-lightbox" id="plateLightbox" role="dialog" aria-modal="true" aria-hidden="true" aria-label="Visual plate inspector">
+    <div class="lightbox-frame">
+      <div class="lightbox-img-wrap">
+        <img id="lightboxImg" src="" alt="" />
+      </div>
+      <div class="lightbox-bar">
+        <div class="lightbox-info" id="lightboxInfo"></div>
+        <button type="button" class="lightbox-close" id="lightboxClose" aria-label="Close inspector">Close ✕</button>
+      </div>
+    </div>
+  </div>
 
   <script>
     (() => {
@@ -1070,6 +1206,60 @@
         row.addEventListener('keydown', event => {
           if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); selectBusinessModel(row); }
         });
+      });
+
+      // Visual plate lightbox inspector
+      const lightbox = document.getElementById('plateLightbox');
+      const lightboxImg = document.getElementById('lightboxImg');
+      const lightboxInfo = document.getElementById('lightboxInfo');
+      const lightboxClose = document.getElementById('lightboxClose');
+
+      const openLightbox = plate => {
+        const img = plate.querySelector('img');
+        const captionText = plate.querySelector('.plate-caption-text');
+        const tag = plate.querySelector('.plate-tag');
+        if (!img || !lightbox || !lightboxImg) return;
+        lightboxImg.src = img.src;
+        lightboxImg.alt = img.alt;
+        if (lightboxInfo) {
+          lightboxInfo.innerHTML = `<strong>${tag ? tag.textContent.trim() : ''}</strong> — ${captionText ? captionText.innerHTML : ''}`;
+        }
+        lightbox.classList.add('is-open');
+        lightbox.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+      };
+
+      const closeLightbox = () => {
+        if (!lightbox || !lightboxImg) return;
+        lightbox.classList.remove('is-open');
+        lightbox.setAttribute('aria-hidden', 'true');
+        lightboxImg.src = '';
+        document.body.style.overflow = '';
+      };
+
+      document.querySelectorAll('.editorial-plate .plate-media').forEach(media => {
+        const plate = media.closest('.editorial-plate');
+        media.addEventListener('click', () => openLightbox(plate));
+        media.addEventListener('keydown', e => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            openLightbox(plate);
+          }
+        });
+      });
+
+      if (lightboxClose) lightboxClose.addEventListener('click', closeLightbox);
+      if (lightbox) {
+        lightbox.addEventListener('click', e => {
+          if (e.target === lightbox || e.target.classList.contains('lightbox-img-wrap')) {
+            closeLightbox();
+          }
+        });
+      }
+      window.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && lightbox && lightbox.classList.contains('is-open')) {
+          closeLightbox();
+        }
       });
     })();
   </script>
