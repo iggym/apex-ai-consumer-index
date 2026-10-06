@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="APEX — a cinematic autopsy of the power law in consumer AI. Based on the a16z Top 100 Gen-AI Consumer Apps, 7th Edition.">
+<meta name="theme-color" content="#000000">
+<title>APEX // The Power Law of Consumer AI</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+/* ============================================================
+   APEX — DESIGN SYSTEM
+   Void #000000 · Orange #FF4F00 · Emerald #00FF66 · Cyan #00E5FF
+   ============================================================ */
+:root{
+  --void:#000000;
+  --ink:#EAEAE6;
+  --dim:#83837E;
+  --faint:rgba(255,255,255,.09);
+  --hair:rgba(255,255,255,.14);
+  --orange:#FF4F00;
+  --emerald:#00FF66;
+  --cyan:#00E5FF;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+  --bebas:'Bebas Neue',sans-serif;
+  --gutter:clamp(20px,6vw,96px);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{background:var(--void);scroll-behavior:smooth;}
+body{
+  background:var(--void);color:var(--ink);
+  font-family:var(--mono);font-size:14px;line-height:1.6;
+  overflow-x:hidden;-webkit-font-smoothing:antialiased;
+}
+::selection{background:var(--orange);color:#000;}
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:#000;}
+::-webkit-scrollbar-thumb{background:var(--orange);}
+a{color:inherit;text-decoration:none;}
+button{font:inherit;background:none;border:none;color:inherit;cursor:pointer;}
+:focus-visible{outline:1px solid var(--orange);outline-offset:3px;}
+
+/* ---------- fixed chrome ---------- */
+#bgCanvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;}
+.guides{position:fixed;inset:0;z-index:1;pointer-events:none;}
+.guides i{position:absolute;top:0;bottom:0;width:1px;background:rgba(255,255,255,.05);}
+.guides i:nth-child(1){left:25%;}.guides i:nth-child(2){left:50%;}.guides i:nth-child(3){left:75%;}
+.grain{
+  position:fixed;inset:-50%;z-index:60;pointer-events:none;opacity:.055;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation:grain 700ms steps(4) infinite;
+}
+@keyframes grain{
+  0%{transform:translate(0,0)}25%{transform:translate(-2%,3%)}
+  50%{transform:translate(3%,-2%)}75%{transform:translate(-3%,-3%)}100%{transform:translate(2%,2%)}
+}
+#progress{position:fixed;top:0;left:0;right:0;height:2px;background:var(--orange);transform-origin:0 50%;transform:scaleX(0);z-index:55;}
+
+#topbar{
+  position:fixed;top:0;left:0;right:0;z-index:50;
+  display:flex;justify-content:space-between;align-items:center;
+  padding:14px var(--gutter);border-bottom:1px solid var(--faint);
+  background:rgba(0,0,0,.35);backdrop-filter:blur(10px);
+}
+.brand{font-family:var(--bebas);font-size:22px;letter-spacing:.14em;}
+.brand b{color:var(--orange);font-weight:400;}
+.top-meta{font-size:10px;letter-spacing:.18em;color:var(--dim);}
+.top-meta em{font-style:normal;color:var(--ink);}
+
+#rail{position:fixed;right:22px;top:50%;transform:translateY(-50%);z-index:50;display:flex;flex-direction:column;gap:14px;}
+#rail button{display:flex;align-items:center;gap:10px;flex-direction:row-reverse;opacity:.45;transition:opacity .3s;}
+#rail button i{width:7px;height:7px;border:1px solid var(--dim);transform:rotate(45deg);transition:all .3s;flex:none;}
+#rail button span{font-size:9px;letter-spacing:.16em;color:var(--dim);white-space:nowrap;}
+#rail button:hover,#rail button.on{opacity:1;}
+#rail button.on i{background:var(--orange);border-color:var(--orange);box-shadow:0 0 10px rgba(255,79,0,.7);}
+
+#hud{
+  position:fixed;left:var(--gutter);bottom:22px;z-index:50;
+  font-size:10px;letter-spacing:.2em;color:var(--dim);
+}
+#hud b{color:var(--orange);font-weight:500;}
+.blink{display:inline-block;width:7px;height:12px;background:var(--orange);vertical-align:-2px;margin-left:8px;animation:blink 1s steps(2) infinite;}
+@keyframes blink{50%{opacity:0}}
+
+/* ---------- custom cursor ---------- */
+#cursor,#cursorDot{position:fixed;top:0;left:0;z-index:100;pointer-events:none;}
+#cursor{width:34px;height:34px;border:1px solid rgba(255,255,255,.4);border-radius:50%;transform:translate(-50%,-50%);transition:width .25s,height .25s,border-color .25s;}
+#cursor.hot{width:52px;height:52px;border-color:var(--orange);box-shadow:0 0 18px -4px rgba(255,79,0,.6);}
+#cursorDot{width:4px;height:4px;background:var(--orange);border-radius:50%;transform:translate(-50%,-50%);}
+@media (hover:none){#cursor,#cursorDot{display:none;}}
+
+/* ---------- typography helpers ---------- */
+.kicker{font-size:10px;letter-spacing:.26em;color:var(--orange);margin-bottom:18px;}
+.scr{opacity:0;}
+.scn-title{
+  font-family:var(--bebas);font-weight:400;
+  font-size:clamp(56px,9vw,140px);line-height:.88;letter-spacing:.01em;
+}
+.scn-title .out{color:transparent;-webkit-text-stroke:1px var(--ink);}
+.lede{max-width:52ch;color:var(--dim);margin-top:22px;font-size:13px;}
+.lede b{color:var(--ink);font-weight:500;}
+
+/* ---------- generic section ---------- */
+section{position:relative;z-index:2;padding:16vh var(--gutter);}
+.scn-head{margin-bottom:8vh;max-width:900px;}
+.scn-head .rule{width:64px;height:2px;background:var(--orange);margin-top:30px;}
+
+/* ============================================================
+   SCENE 0 — HERO
+   ============================================================ */
+#hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding-top:14vh;}
+.vol{position:absolute;left:calc(var(--gutter) * .28);top:50%;transform:translateY(-50%) rotate(180deg);writing-mode:vertical-rl;font-size:10px;letter-spacing:.4em;color:var(--dim);}
+#hKick{font-size:11px;letter-spacing:.3em;color:var(--orange);margin-bottom:3vh;}
+#heroTitle{
+  font-family:var(--bebas);font-weight:400;
+  font-size:clamp(110px,24vw,340px);line-height:.82;letter-spacing:.015em;
+  margin-left:-.03em;
+}
+#heroTitle .x{color:var(--orange);}
+#hSub{
+  font-family:var(--bebas);font-weight:400;
+  font-size:clamp(22px,3.4vw,44px);letter-spacing:.24em;color:var(--ink);
+  margin-top:1.5vh;
+}
+#hLede{margin-top:3.5vh;color:var(--dim);max-width:58ch;font-size:13px;}
+#hLede b{color:var(--ink);font-weight:500;}
+
+.hstats{display:flex;flex-wrap:wrap;gap:clamp(24px,4vw,64px);margin-top:8vh;padding-top:26px;border-top:1px solid var(--faint);}
+.hstat{display:flex;flex-direction:column;gap:4px;border-left:1px solid var(--hair);padding-left:18px;}
+.hstat-num{font-family:var(--bebas);font-size:clamp(40px,5vw,72px);line-height:1;color:var(--orange);letter-spacing:.02em;}
+.hstat-lab{font-size:10px;letter-spacing:.18em;color:var(--dim);}
+.hscroll{margin-top:9vh;display:flex;align-items:center;gap:14px;font-size:10px;letter-spacing:.28em;color:var(--dim);}
+.hscroll i{width:1px;height:34px;background:var(--orange);display:block;transform-origin:top;animation:drop 1.6s ease-in-out infinite;}
+@keyframes drop{0%{transform:scaleY(0)}45%{transform:scaleY(1);transform-origin:top}55%{transform:scaleY(1);transform-origin:bottom}100%{transform:scaleY(0);transform-origin:bottom}}
+
+/* ---------- ticker ---------- */
+.ticker{position:relative;z-index:2;overflow:hidden;border-block:1px solid var(--faint);padding:12px 0;background:rgba(0,0,0,.5);}
+.tk{display:flex;width:max-content;animation:tk 40s linear infinite;}
+.ticker:hover .tk{animation-play-state:paused;}
+.tk span{white-space:nowrap;font-size:11px;letter-spacing:.22em;color:var(--dim);padding-right:4rem;}
+.tk span b{color:var(--orange);font-weight:500;}
+.tk span u{color:var(--cyan);text-decoration:none;}
+.tk span em{color:var(--emerald);font-style:normal;}
+@keyframes tk{to{transform:translateX(-50%);}}
+
+/* ============================================================
+   SCENE I — THE MONOLITH
+   ============================================================ */
+#monoStage{height:520vh;position:relative;}
+.mono-viewport{position:sticky;top:0;height:100vh;overflow:hidden;}
+#monoCanvas{position:absolute;inset:0;width:100%;height:100%;}
+.mono-ruler{position:absolute;top:0;right:38px;bottom:0;width:110px;overflow:hidden;opacity:.75;}
+#rulerInner{position:absolute;top:0;left:0;right:0;will-change:transform;}
+.rtick{position:absolute;right:0;height:1px;width:14px;background:rgba(255,255,255,.3);}
+.rtick span{position:absolute;right:20px;top:-7px;font-size:9px;letter-spacing:.1em;color:var(--dim);white-space:nowrap;}
+.rtick.hot{background:var(--orange);width:22px;}
+.rtick.hot span{color:var(--orange);}
+.rtick.cold{background:var(--cyan);width:22px;}
+.rtick.cold span{color:var(--cyan);}
+#altMark{position:absolute;right:30px;top:50%;width:52px;height:1px;background:var(--orange);}
+#altMark::after{content:'ALT';position:absolute;right:0;top:-16px;font-size:9px;letter-spacing:.2em;color:var(--orange);}
+.mlabel{position:absolute;pointer-events:none;opacity:0;visibility:hidden;}
+.mlabel .big{font-family:var(--bebas);line-height:.85;letter-spacing:.01em;}
+.mlabel .cap{font-size:10px;letter-spacing:.24em;color:var(--dim);margin-top:10px;}
+#mHint{position:absolute;left:50%;bottom:7vh;transform:translateX(-50%);font-size:10px;letter-spacing:.3em;color:var(--dim);display:flex;align-items:center;gap:12px;}
+#mHint i{width:1px;height:26px;background:var(--orange);transform-origin:top;animation:drop 1.6s ease-in-out infinite;display:block;}
+#mL1{left:8vw;top:26vh;}
+#mL1 .big{font-size:clamp(80px,14vw,220px);color:var(--orange);}
+#mL2{left:8vw;bottom:20vh;}
+#mL2 .big{font-size:clamp(48px,8vw,120px);color:var(--cyan);}
+#mL3{left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;width:min(90vw,760px);}
+#mL3 .big{font-size:clamp(44px,7.5vw,110px);color:var(--ink);}
+#mL3 .big b{color:var(--orange);font-weight:400;}
+
+/* ============================================================
+   SCENE II — THE STATE DIVIDE
+   ============================================================ */
+#scn-states .wrap{display:grid;grid-template-columns:minmax(280px,1fr) minmax(0,1.35fr);gap:clamp(30px,6vw,90px);align-items:start;}
+.map-legend{display:flex;flex-direction:column;gap:10px;margin:26px 0 34px;}
+.lg{display:flex;align-items:center;gap:12px;font-size:11px;letter-spacing:.18em;color:var(--dim);}
+.lg i{width:11px;height:11px;border:1px solid;flex:none;}
+.lg-o i{border-color:var(--cyan);}
+.lg-a i{border-color:var(--emerald);background:rgba(0,255,102,.12);}
+#stPanel{
+  border:1px solid var(--hair);background:rgba(10,10,10,.55);
+  backdrop-filter:blur(14px) saturate(130%);border-radius:2px;
+  padding:26px;min-height:220px;position:sticky;top:110px;
+  transition:border-color .3s, box-shadow .3s;
+}
+#stPanel.live{border-color:var(--orange);box-shadow:0 0 30px -10px rgba(255,79,0,.5);}
+.sp-code{font-size:10px;letter-spacing:.24em;color:var(--dim);margin-bottom:12px;}
+.sp-state{font-family:var(--bebas);font-size:42px;line-height:1;letter-spacing:.03em;}
+.sp-leader{margin-top:14px;font-size:11px;letter-spacing:.18em;}
+.sp-leader.O{color:var(--cyan);}
+.sp-leader.A{color:var(--emerald);}
+.sp-note{margin-top:12px;font-size:12px;color:var(--dim);line-height:1.7;}
+#stateGrid{display:grid;grid-template-columns:repeat(11,1fr);gap:4px;width:100%;max-width:660px;}
+.tile{
+  aspect-ratio:1;display:flex;align-items:center;justify-content:center;position:relative;
+  border:1px solid rgba(255,255,255,.12);color:var(--dim);
+  font-size:10px;letter-spacing:.08em;cursor:pointer;user-select:none;
+  background:rgba(255,255,255,.015);transition:border-color .25s,color .25s,background .25s;
+  will-change:transform;
+}
+.tile::after{content:'';position:absolute;bottom:3px;left:30%;right:30%;height:2px;}
+.tile.t-O::after{background:rgba(0,229,255,.55);}
+.tile.t-A{border-color:rgba(0,255,102,.55);color:var(--emerald);background:rgba(0,255,102,.06);}
+.tile.t-A::after{background:var(--emerald);}
+.tile:hover,.tile.sel{border-color:var(--orange);color:var(--ink);background:rgba(255,79,0,.07);z-index:5;}
+.map-note{margin-top:22px;font-size:10px;letter-spacing:.14em;color:var(--dim);}
+
+/* ============================================================
+   SCENE III — TIER PRISM
+   ============================================================ */
+.prism{max-width:1080px;}
+.tier-row{
+  display:grid;grid-template-columns:minmax(150px,200px) 1fr minmax(74px,90px);
+  gap:clamp(14px,2.5vw,34px);align-items:center;
+  padding:30px 14px;border-top:1px solid var(--faint);cursor:crosshair;
+  border-left:1px solid transparent;transition:border-color .3s;will-change:transform;
+}
+.tier-row:last-of-type{border-bottom:1px solid var(--faint);}
+.tier-row:hover{border-left-color:var(--orange);}
+.t-model{font-family:var(--bebas);font-size:clamp(26px,3vw,40px);letter-spacing:.04em;display:block;line-height:1;}
+.t-plan{font-size:10px;letter-spacing:.18em;color:var(--dim);display:block;margin-top:6px;}
+.tier-track{position:relative;height:38px;border:1px solid var(--hair);background:rgba(255,255,255,.02);}
+.tier-fill{
+  position:absolute;inset:2px auto 2px 2px;width:calc(100% - 4px);
+  transform:scaleX(0);transform-origin:left;
+  background:var(--c,var(--orange));
+  box-shadow:0 0 22px -6px var(--c,var(--orange));
+}
+.tier-row:hover .tier-fill{filter:brightness(1.2);}
+.t-num{font-family:var(--bebas);font-size:clamp(28px,3.2vw,46px);text-align:right;color:var(--ink);line-height:1;}
+.tier-row.lead .t-num{color:var(--orange);}
+.prism-axis{display:grid;grid-template-columns:minmax(150px,200px) 1fr minmax(74px,90px);gap:clamp(14px,2.5vw,34px);margin-top:10px;}
+.prism-axis .ax{display:flex;justify-content:space-between;font-size:9px;letter-spacing:.14em;color:var(--dim);grid-column:2;}
+.prism-mult{margin-top:34px;font-size:11px;letter-spacing:.2em;color:var(--dim);}
+.prism-mult b{color:var(--orange);font-weight:500;}
+#prismTip{
+  position:fixed;z-index:70;max-width:290px;pointer-events:none;
+  border:1px solid var(--orange);background:rgba(8,8,8,.82);
+  backdrop-filter:blur(12px);border-radius:2px;padding:16px 18px;
+  opacity:0;visibility:hidden;transition:opacity .2s;
+  box-shadow:0 0 34px -12px rgba(255,79,0,.55);
+}
+#prismTip.on{opacity:1;visibility:visible;}
+#prismTip .tt-h{font-family:var(--bebas);font-size:22px;letter-spacing:.04em;}
+#prismTip .tt-p{font-size:10px;letter-spacing:.18em;color:var(--dim);margin-top:2px;}
+#prismTip .tt-b{font-size:11px;margin-top:10px;line-height:1.7;color:var(--ink);}
+#prismTip .tt-n{font-size:10px;margin-top:10px;line-height:1.7;color:var(--dim);}
+
+/* ============================================================
+   SCENE IV — AGENT VELOCITY
+   ============================================================ */
+#scn-agents{overflow:hidden;border-block:1px solid var(--faint);background:rgba(0,0,0,.6);}
+.streaks{position:absolute;inset:0;pointer-events:none;}
+.streaks i{position:absolute;height:1px;width:34vw;left:100%;opacity:.16;animation:stk linear infinite;}
+.streaks i:nth-child(1){top:14%;background:var(--orange);animation-duration:2.6s;}
+.streaks i:nth-child(2){top:27%;background:rgba(255,255,255,.5);animation-duration:4.1s;animation-delay:-1.2s;}
+.streaks i:nth-child(3){top:41%;background:var(--cyan);opacity:.12;animation-duration:3.2s;animation-delay:-2s;}
+.streaks i:nth-child(4){top:58%;background:var(--orange);animation-duration:2.1s;animation-delay:-.6s;}
+.streaks i:nth-child(5){top:71%;background:rgba(255,255,255,.4);opacity:.1;animation-duration:5s;animation-delay:-3s;}
+.streaks i:nth-child(6){top:86%;background:var(--cyan);opacity:.14;animation-duration:2.9s;animation-delay:-1.6s;}
+@keyframes stk{to{transform:translateX(-160vw);}}
+.vel-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:clamp(30px,6vw,90px);align-items:end;}
+.vel-fig .vel-num{font-family:var(--bebas);font-size:clamp(90px,15vw,240px);line-height:.85;color:var(--orange);letter-spacing:.01em;display:block;}
+.vel-fig .vel-cap{font-size:11px;letter-spacing:.24em;color:var(--dim);margin-top:14px;display:block;}
+.vel-fig.right .vel-num{font-size:clamp(34px,4.6vw,64px);color:var(--ink);letter-spacing:.06em;}
+.vel-fig.right .vel-cap{text-align:left;}
+.vel-fig.right{border-left:1px solid var(--hair);padding-left:clamp(18px,3vw,40px);}
+
+/* ============================================================
+   SCENE V — LAUNCH DIVERGENCE
+   ============================================================ */
+.launch-grid{display:grid;grid-template-columns:1fr 1px 1fr;gap:clamp(20px,4vw,60px);align-items:stretch;}
+.launch-div{background:var(--hair);}
+.launch-col{will-change:transform;}
+.lc-brand{font-family:var(--bebas);font-size:clamp(30px,3.6vw,52px);letter-spacing:.06em;line-height:1;}
+.lc-brand.l-c{color:var(--orange);}
+.lc-brand.l-g{color:var(--cyan);}
+.lc-pct{font-family:var(--bebas);font-size:clamp(84px,12vw,190px);line-height:.9;margin-top:16px;}
+.lc-pct small{font-size:.35em;letter-spacing:.08em;}
+.lc-cap{font-size:11px;letter-spacing:.2em;color:var(--dim);margin-top:12px;}
+.lc-track{margin-top:26px;height:14px;border:1px solid var(--hair);position:relative;}
+.lc-fill{position:absolute;inset:2px auto 2px 2px;width:calc(100% - 4px);transform:scaleX(0);transform-origin:left;}
+.lc-rest{margin-top:12px;font-size:10px;letter-spacing:.16em;color:var(--dim);}
+.launch-foot{margin-top:9vh;text-align:center;font-size:11px;letter-spacing:.34em;color:var(--dim);}
+.launch-foot b{color:var(--ink);font-weight:500;}
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+#eof{padding:18vh var(--gutter) 10vh;border-top:1px solid var(--faint);}
+.eof-big{
+  font-family:var(--bebas);font-weight:400;text-align:center;
+  font-size:clamp(110px,22vw,320px);line-height:.85;letter-spacing:.02em;
+  color:transparent;-webkit-text-stroke:1px rgba(255,255,255,.35);
+  transition:color .5s,-webkit-text-stroke-color .5s;cursor:default;
+}
+.eof-big:hover{color:var(--orange);-webkit-text-stroke-color:var(--orange);}
+.eof-meta{display:flex;flex-wrap:wrap;justify-content:space-between;gap:14px;margin-top:8vh;padding-top:22px;border-top:1px solid var(--faint);font-size:10px;letter-spacing:.18em;color:var(--dim);}
+.eof-meta b{color:var(--ink);font-weight:500;}
+
+/* ---------- responsive ---------- */
+@media (max-width:960px){
+  #rail,.mono-ruler,#altMark,.guides,.vol{display:none;}
+  #scn-states .wrap{grid-template-columns:1fr;}
+  #stPanel{position:static;min-height:0;}
+  .vel-grid{grid-template-columns:1fr;}
+  .vel-fig.right{border-left:none;padding-left:0;border-top:1px solid var(--hair);padding-top:26px;}
+  .launch-grid{grid-template-columns:1fr;}
+  .launch-div{height:1px;}
+  .tier-row{grid-template-columns:110px 1fr 64px;}
+  .prism-axis{grid-template-columns:110px 1fr 64px;}
+}
+@media (prefers-reduced-motion:reduce){
+  .tk,.grain,.streaks i,.hscroll i,#mHint i,.blink{animation:none !important;}
+  html{scroll-behavior:auto;}
+}
+</style>
+</head>
+<body>
+
+<!-- fixed environment -->
+<canvas id="bgCanvas"></canvas>
+<div class="guides"><i></i><i></i><i></i></div>
+<div class="grain"></div>
+<div id="progress"></div>
+
+<header id="topbar">
+  <a class="brand" href="#hero" data-hover>APEX<b>//</b></a>
+  <div class="top-meta">A16Z TOP 100 GEN-AI CONSUMER APPS — <em>7TH EDITION</em></div>
+</header>
+
+<nav id="rail" aria-label="Scene navigation"></nav>
+<div id="hud">SCN.00 — <b id="hudName">HERO</b><span class="blink"></span></div>
+<div id="cursor"></div><div id="cursorDot"></div>
+
+<main>
+
+  <!-- ================= SCENE 0 · HERO ================= -->
+  <section id="hero">
+    <span class="vol">VOL.07 — CONSUMER AI</span>
+    <p id="hKick" class="scr" data-text="A16Z // TOP 100 GEN-AI CONSUMER APPS — 7TH EDITION">A16Z // TOP 100 GEN-AI CONSUMER APPS — 7TH EDITION</p>
+    <h1 id="heroTitle">APE<span class="x">X</span></h1>
+    <h2 id="hSub" class="scr" data-text="THE POWER LAW OF CONSUMER AI">THE POWER LAW OF CONSUMER AI</h2>
+    <p id="hLede" class="scr" data-text="Attention concentrates. Spend concentrates harder. This is a single-file autopsy of who actually pays for consumer AI — and how violently the distribution skews.">Attention concentrates. Spend concentrates harder. This is a single-file autopsy of <b>who actually pays</b> for consumer AI — and how violently the distribution skews.</p>
+
+    <div class="hstats">
+      <div class="hstat"><span class="hstat-num cnt-hero" data-count="903" data-prefix="$">$0</span><span class="hstat-lab">TOP-1% SPENDERS — AVG / MO</span></div>
+      <div class="hstat"><span class="hstat-num cnt-hero" data-count="19.5" data-dec="1" data-suffix="%">0</span><span class="hstat-lab">OF TOTAL SPEND THEY CARRY</span></div>
+      <div class="hstat"><span class="hstat-num cnt-hero" data-count="47">0</span><span class="hstat-lab">STATES LED BY OPENAI</span></div>
+      <div class="hstat"><span class="hstat-num cnt-hero" data-count="7.3" data-dec="1" data-suffix="%">0</span><span class="hstat-lab">CLAUDE → $100+/MO MAX</span></div>
+    </div>
+
+    <div class="hscroll"><i></i>SCROLL TO DESCEND</div>
+  </section>
+
+  <!-- data ticker -->
+  <div class="ticker" aria-hidden="true">
+    <div class="tk">
+      <span>TOP 1% AVG <b>$903/MO</b> — CARRYING <b>19.5%</b> OF ALL SPEND /// MEDIAN SPENDER <u>$25/MO</u> /// OPENAI LEADS MERCHANT SPEND IN <b>47 STATES</b> /// ANTHROPIC HOLDS <em>CA · MA · MT · DC</em> /// CLAUDE MAX CONVERSION <b>7.3%</b> /// INSTINCT AGENT USERS SPEND <b>$1,300/MO</b> — <b>$1B+</b> ANNUALIZED /// CLAUDE LAUNCHES <b>65.8%</b> WORK / GEMINI <u>48.6%</u> CONSUMER ///</span>
+      <span>TOP 1% AVG <b>$903/MO</b> — CARRYING <b>19.5%</b> OF ALL SPEND /// MEDIAN SPENDER <u>$25/MO</u> /// OPENAI LEADS MERCHANT SPEND IN <b>47 STATES</b> /// ANTHROPIC HOLDS <em>CA · MA · MT · DC</em> /// CLAUDE MAX CONVERSION <b>7.3%</b> /// INSTINCT AGENT USERS SPEND <b>$1,300/MO</b> — <b>$1B+</b> ANNUALIZED /// CLAUDE LAUNCHES <b>65.8%</b> WORK / GEMINI <u>48.6%</u> CONSUMER ///</span>
+    </div>
+  </div>
+
+  <!-- ================= SCENE I · THE MONOLITH ================= -->
+  <section id="scn-monolith" style="padding-bottom:0;">
+    <header class="scn-head">
+      <p class="kicker scr" data-text="SCN.01 // SPEND CONCENTRATION">SCN.01 // SPEND CONCENTRATION</p>
+      <h2 class="scn-title scr" data-text="THE MONOLITH">THE <span class="out">MONOLITH</span></h2>
+      <p class="lede scr" data-text="One percent of spenders. One fifth of the money. The median user is a rounding error at the base of the column.">One percent of spenders. One fifth of the money. <b>The median user is a rounding error</b> at the base of the column.</p>
+      <div class="rule"></div>
+    </header>
+  </section>
+
+  <div id="monoStage">
+    <div class="mono-viewport" id="monoViewport">
+      <canvas id="monoCanvas"></canvas>
+      <div class="mono-ruler"><div id="rulerInner"></div></div>
+      <div id="altMark"></div>
+
+      <div class="mlabel" id="mL1">
+        <div class="big">$903</div>
+        <div class="cap">AVG MONTHLY SPEND — TOP 1% OF AI SPENDERS</div>
+      </div>
+      <div class="mlabel" id="mL2">
+        <div class="big">$25</div>
+        <div class="cap">AVG MONTHLY SPEND — THE MEDIAN SPENDER</div>
+      </div>
+      <div class="mlabel" id="mL3">
+        <div class="big">1% → <b>19.5%</b></div>
+        <div class="cap">THE TOP 1% CARRIES NEARLY A FIFTH OF ALL CONSUMER AI SPEND</div>
+      </div>
+      <div id="mHint"><i></i>DESCEND</div>
+    </div>
+  </div>
+
+  <!-- ================= SCENE II · THE STATE DIVIDE ================= -->
+  <section id="scn-states">
+    <header class="scn-head">
+      <p class="kicker scr" data-text="SCN.02 // MERCHANT SPEND GEOGRAPHY">SCN.02 // MERCHANT SPEND GEOGRAPHY</p>
+      <h2 class="scn-title scr" data-text="THE STATE DIVIDE">THE STATE <span class="out">DIVIDE</span></h2>
+      <p class="lede scr" data-text="OpenAI owns the map — 47 of 51 jurisdictions. Anthropic holds four enclaves where spend density runs highest.">OpenAI owns the map — <b>47 of 51 jurisdictions</b>. Anthropic holds <b>four enclaves</b> where spend density runs highest.</p>
+      <div class="rule"></div>
+    </header>
+
+    <div class="wrap">
+      <div>
+        <div class="map-legend">
+          <span class="lg lg-o"><i></i>OPENAI LED — 47 / 51</span>
+          <span class="lg lg-a"><i></i>ANTHROPIC ENCLAVE — 4 / 51</span>
+        </div>
+        <div id="stPanel" class="spring-host" data-hover>
+          <div class="sp-code" id="spCode">// AWAITING SELECTION</div>
+          <div class="sp-state" id="spState">HOVER A JURISDICTION</div>
+          <div class="sp-leader" id="spLeader" style="margin-top:16px;color:var(--dim);">THE CARTOGRAM RESPONDS TO YOUR CURSOR</div>
+          <p class="sp-note" id="spNote">Each tile is one U.S. state or district, positioned by approximate geography. Merchant spend leadership determines its classification.</p>
+        </div>
+      </div>
+
+      <div>
+        <div id="stateGrid" aria-label="U.S. state cartogram of merchant spend leadership"></div>
+        <p class="map-note">MERCHANT SPEND LEADER BY U.S. STATE — GEOGRAPHIC CARTOGRAM, NOT TO SCALE.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= SCENE III · TIER PRISM ================= -->
+  <section id="scn-prism">
+    <header class="scn-head">
+      <p class="kicker scr" data-text="SCN.03 // PREMIUM TIER CONVERSION">SCN.03 // PREMIUM TIER CONVERSION</p>
+      <h2 class="scn-title scr" data-text="THE TIER PRISM">THE TIER <span class="out">PRISM</span></h2>
+      <p class="lede scr" data-text="Every model has subscribers. Almost none convert them to $100+/mo. Claude converts 6.6 times more of its base than ChatGPT.">Every model has subscribers. Almost none convert them to <b>$100+/mo</b>. Claude converts <b>6.6×</b> more of its base than ChatGPT.</p>
+      <div class="rule"></div>
+    </header>
+
+    <div class="prism">
+      <div class="tier-row lead spring" data-hover
+           data-model="CLAUDE" data-plan="MAX PLAN — $100+/MO" data-pct="7.3%"
+           data-note="6.6× ChatGPT Pro · 5.6× Google Ultra — the only premium tier with real pull-through.">
+        <div><span class="t-model">CLAUDE</span><span class="t-plan">MAX — $100+/MO</span></div>
+        <div class="tier-track"><div class="tier-fill" data-pct="7.3" style="--c:var(--orange)"></div></div>
+        <div class="t-num cnt" data-count="7.3" data-dec="1" data-suffix="%">0.0%</div>
+      </div>
+      <div class="tier-row spring" data-hover
+           data-model="GOOGLE" data-plan="ULTRA PLAN" data-pct="1.3%"
+           data-note="Premium conversion exists — but stays an order of magnitude behind Claude's pull.">
+        <div><span class="t-model">GOOGLE</span><span class="t-plan">ULTRA PLAN</span></div>
+        <div class="tier-track"><div class="tier-fill" data-pct="1.3" style="--c:var(--cyan)"></div></div>
+        <div class="t-num cnt" data-count="1.3" data-dec="1" data-suffix="%">0.0%</div>
+      </div>
+      <div class="tier-row spring" data-hover
+           data-model="CHATGPT" data-plan="PRO PLAN" data-pct="1.1%"
+           data-note="The largest subscriber base in consumer AI — and the weakest premium pull-through.">
+        <div><span class="t-model">CHATGPT</span><span class="t-plan">PRO PLAN</span></div>
+        <div class="tier-track"><div class="tier-fill" data-pct="1.1" style="--c:rgba(255,255,255,.45)"></div></div>
+        <div class="t-num cnt" data-count="1.1" data-dec="1" data-suffix="%">0.0%</div>
+      </div>
+      <div class="prism-axis"><span></span><span class="ax"><span>0%</span><span>2%</span><span>4%</span><span>6%</span><span>8% OF SUBSCRIBERS</span></span><span></span></div>
+      <p class="prism-mult">CONVERSION INEQUALITY — CLAUDE MAX PULLS <b>6.6×</b> CHATGPT PRO · <b>5.6×</b> GOOGLE ULTRA</p>
+    </div>
+  </section>
+
+  <!-- floating tooltip -->
+  <div id="prismTip">
+    <div class="tt-h" id="ttModel"></div>
+    <div class="tt-p" id="ttPlan"></div>
+    <div class="tt-b" id="ttBig"></div>
+    <div class="tt-n" id="ttNote"></div>
+  </div>
+
+  <!-- ================= SCENE IV · AGENT VELOCITY ================= -->
+  <section id="scn-agents">
+    <div class="streaks" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    <header class="scn-head" style="max-width:760px;">
+      <p class="kicker scr" data-text="SCN.04 // INSTINCT — IMESSAGE AGENT">SCN.04 // INSTINCT — IMESSAGE AGENT</p>
+      <h2 class="scn-title scr" data-text="AGENT VELOCITY">AGENT <span class="out">VELOCITY</span></h2>
+      <p class="lede scr" data-text="Agents don't browse. They transact — inside a chat window, at a run-rate the storefront era never reached.">Agents don't browse. <b>They transact</b> — inside a chat window, at a run-rate the storefront era never reached.</p>
+      <div class="rule"></div>
+    </header>
+
+    <div class="vel-grid">
+      <div class="vel-fig">
+        <span class="vel-num cnt" data-count="1300" data-prefix="$">$0</span>
+        <span class="vel-cap">AVERAGE MONTHLY SPEND — PER INSTINCT USER</span>
+      </div>
+      <div class="vel-fig right">
+        <span class="vel-num cnt" data-count="1000000000" data-prefix="$" data-suffix="+">$0</span>
+        <span class="vel-cap">ANNUALIZED TRANSACTION VOLUME</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= SCENE V · LAUNCH DIVERGENCE ================= -->
+  <section id="scn-launch">
+    <header class="scn-head">
+      <p class="kicker scr" data-text="SCN.05 // WHERE THE BUILDS GO">SCN.05 // WHERE THE BUILDS GO</p>
+      <h2 class="scn-title scr" data-text="LAUNCH DIVERGENCE">LAUNCH <span class="out">DIVERGENCE</span></h2>
+      <p class="lede scr" data-text="Claude ships for work. Gemini ships for the feed. Same industry — opposite gravity.">Claude ships for work. Gemini ships for the feed. <b>Same industry — opposite gravity.</b></p>
+      <div class="rule"></div>
+    </header>
+
+    <div class="launch-grid">
+      <div class="launch-col" id="divL">
+        <div class="lc-brand l-c">CLAUDE</div>
+        <div class="lc-pct"><span class="cnt" data-count="65.8" data-dec="1">0</span><small>%</small></div>
+        <div class="lc-cap">OF LAUNCHES SHIP AS WORK TOOLS</div>
+        <div class="lc-track"><div class="lc-fill" data-pct="65.8" style="background:var(--orange);box-shadow:0 0 18px -6px var(--orange);"></div></div>
+        <div class="lc-rest">REMAINING 34.2% → CONSUMER / OTHER</div>
+      </div>
+      <div class="launch-div"></div>
+      <div class="launch-col" id="divR">
+        <div class="lc-brand l-g">GEMINI</div>
+        <div class="lc-pct"><span class="cnt" data-count="48.6" data-dec="1">0</span><small>%</small></div>
+        <div class="lc-cap">OF LAUNCHES SHIP AS CONSUMER FEATURES</div>
+        <div class="lc-track"><div class="lc-fill" data-pct="48.6" style="background:var(--cyan);box-shadow:0 0 18px -6px var(--cyan);"></div></div>
+        <div class="lc-rest">REMAINING 51.4% → WORK / OTHER</div>
+      </div>
+    </div>
+    <p class="launch-foot">SAME INDUSTRY — <b>OPPOSITE GRAVITY</b></p>
+  </section>
+
+  <!-- ================= EOF ================= -->
+  <footer id="eof">
+    <div class="eof-big spring" data-hover>APEX//</div>
+    <div class="eof-meta">
+      <span>SOURCE — <b>A16Z TOP 100 GEN-AI CONSUMER APPS · 7TH EDITION</b></span>
+      <span>FIGURES AS REPORTED · EDITORIAL VISUALIZATION</span>
+      <span>SINGLE FILE · NO BUILD · CLIENT-SIDE ONLY</span>
+    </div>
+  </footer>
+
+</main>
+
+<noscript><style>.scr,#heroTitle{opacity:1 !important}</style></noscript>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script>
+/* ============================================================
+   APEX — ENGINE
+   ============================================================ */
+(function(){
+'use strict';
+gsap.registerPlugin(ScrollTrigger);
+
+const qs  = s => document.querySelector(s);
+const qsa = s => Array.from(document.querySelectorAll(s));
+const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const TOUCH   = window.matchMedia('(hover: none)').matches;
+const lerp = (a,b,t)=>a+(b-a)*t;
+const smooth = t => t*t*(3-2*t);
+
+/* ---------- text scrambler ---------- */
+const GLYPHS = '!<>-_\\/[]{}=+*^?#@$%&0123456789';
+class Scrambler{
+  constructor(el){ this.txt = el.dataset.text || el.textContent; this.el = el; }
+  run(delay, dur){
+    const el = this.el, txt = this.txt, len = txt.length;
+    if (REDUCED){ el.textContent = txt; el.style.opacity = 1; return; }
+    const start = performance.now() + (delay||0);
+    el.style.opacity = 1;
+    let flip = 0;
+    const frame = now => {
+      const t = (now - start) / dur;
+      if (t < 0){ requestAnimationFrame(frame); return; }
+      let out = '';
+      for (let i=0;i<len;i++){
+        if (t >= (i/len)*0.82 + 0.12 || t >= 1) out += txt[i];
+        else out += (txt[i]===' ') ? ' ' : GLYPHS[(Math.random()*GLYPHS.length)|0];
+      }
+      el.textContent = out;
+      if (t < 1) requestAnimationFrame(frame); else el.textContent = txt;
+    };
+    requestAnimationFrame(frame);
+  }
+}
+
+/* ---------- count-up ---------- */
+function countUp(el){
+  const end = parseFloat(el.dataset.count), dec = +(el.dataset.dec||0);
+  const pre = el.dataset.prefix||'', suf = el.dataset.suffix||'';
+  const fmt = v => dec ? v.toFixed(dec) : Math.round(v).toLocaleString('en-US');
+  if (REDUCED){ el.textContent = pre + fmt(end) + suf; return; }
+  const o = {v:0};
+  gsap.to(o,{v:end, duration:2.1, ease:'power4.out',
+    onUpdate:()=>{ el.textContent = pre + fmt(o.v) + suf; }});
+}
+
+/* ---------- spring physics hover ---------- */
+function springify(el, target, stiff, damp){
+  if (TOUCH) return;
+  target = target||1.045; stiff = stiff||0.14; damp = damp||0.7;
+  let s=1, v=0, goal=1, raf=null;
+  const tick = ()=>{
+    v += (goal - s)*stiff; v *= damp; s += v;
+    el.style.transform = 'scale(' + s.toFixed(4) + ')';
+    if (Math.abs(goal-s) > 0.0006 || Math.abs(v) > 0.0006) raf = requestAnimationFrame(tick);
+    else { el.style.transform=''; raf=null; }
+  };
+  const kick = ()=>{ if(!raf) raf = requestAnimationFrame(tick); };
+  el.addEventListener('pointerenter', ()=>{ goal=target; kick(); });
+  el.addEventListener('pointerleave', ()=>{ goal=1; kick(); });
+  el.addEventListener('pointerdown',  ()=>{ goal=target*0.965; kick(); });
+  el.addEventListener('pointerup',    ()=>{ goal = el.matches(':hover') ? target : 1; kick(); });
+}
+
+/* ---------- custom cursor ---------- */
+const cursor = (()=>{
+  const ring = qs('#cursor'), dot = qs('#cursorDot');
+  if (TOUCH) return {update(){}};
+  let mx=innerWidth/2, my=innerHeight/2, rx=mx, ry=my;
+  addEventListener('pointermove', e=>{
+    mx=e.clientX; my=e.clientY;
+    dot.style.transform = 'translate('+mx+'px,'+my+'px) translate(-50%,-50%)';
+    const hot = e.target.closest('a,button,.tile,.tier-row,[data-hover]');
+    ring.classList.toggle('hot', !!hot);
+  }, {passive:true});
+  return { update(){ rx=lerp(rx,mx,0.16); ry=lerp(ry,my,0.16);
+    ring.style.transform = 'translate('+rx+'px,'+ry+'px) translate(-50%,-50%)'; } };
+})();
+
+/* ============================================================
+   THREE.JS — shared soft-disc particle factory
+   ============================================================ */
+function softPoints(count, spread, opts){
+  opts = opts||{};
+  const pos = new Float32Array(count*3), scl = new Float32Array(count), seed = new Float32Array(count);
+  for (let i=0;i<count;i++){
+    pos[i*3]   = lerp(-spread[0], spread[0], Math.random());
+    pos[i*3+1] = lerp(-spread[1], spread[1], Math.random());
+    pos[i*3+2] = lerp(-spread[2], spread[2], Math.random());
+    scl[i]  = lerp(opts.minS||0.6, opts.maxS||2.2, Math.pow(Math.random(),1.6));
+    seed[i] = Math.random();
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pos,3));
+  g.setAttribute('aScale',   new THREE.BufferAttribute(scl,1));
+  g.setAttribute('aSeed',    new THREE.BufferAttribute(seed,1));
+  const m = new THREE.ShaderMaterial({
+    transparent:true, depthWrite:false, blending:THREE.AdditiveBlending,
+    uniforms:{ uTime:{value:0}, uPR:{value:Math.min(devicePixelRatio,2)} },
+    vertexShader:`
+      attribute float aScale; attribute float aSeed;
+      uniform float uTime; uniform float uPR; varying float vSeed;
+      void main(){
+        vSeed = aSeed;
+        vec3 p = position;
+        p.y += sin(uTime*0.14 + aSeed*6.2831) * ${(opts.drift||1.5).toFixed(2)};
+        p.x += cos(uTime*0.10 + aSeed*4.0) * ${(opts.drift||1.5).toFixed(2)};
+        vec4 mv = modelViewMatrix * vec4(p,1.0);
+        gl_PointSize = aScale * uPR * (150.0 / -mv.z);
+        gl_Position = projectionMatrix * mv;
+      }`,
+    fragmentShader:`
+      varying float vSeed;
+      void main(){
+        float d = length(gl_PointCoord - 0.5);
+        float a = smoothstep(0.5, 0.04, d);
+        vec3 col = vec3(0.82);
+        if (vSeed > 0.93)      col = vec3(1.0, 0.31, 0.0);
+        else if (vSeed < 0.05) col = vec3(0.0, 0.898, 1.0);
+        gl_FragColor = vec4(col, a * (0.22 + 0.55*vSeed));
+      }`
+  });
+  return new THREE.Points(g, m);
+}
+
+/* ============================================================
+   BACKGROUND — persistent particle void (Scene 0)
+   ============================================================ */
+const bg = (()=>{
+  const canvas = qs('#bgCanvas');
+  const renderer = new THREE.WebGLRenderer({canvas, alpha:true, antialias:false});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  const scene = new THREE.Scene();
+  const cam = new THREE.PerspectiveCamera(60, innerWidth/innerHeight, 0.1, 300);
+  cam.position.z = 30;
+  const count = innerWidth < 768 ? 650 : 1500;
+  const pts = softPoints(count, [70,45,35], {minS:0.5, maxS:2.3, drift:1.6});
+  scene.add(pts);
+  pts.position.z = -30;
+
+  let mx=0,my=0;
+  if (!TOUCH) addEventListener('pointermove', e=>{
+    mx = (e.clientX/innerWidth - .5); my = (e.clientY/innerHeight - .5);
+  }, {passive:true});
+
+  function resize(){
+    renderer.setSize(innerWidth, innerHeight);
+    cam.aspect = innerWidth/innerHeight; cam.updateProjectionMatrix();
+  }
+  resize(); addEventListener('resize', resize);
+
+  let t = 0;
+  return {
+    render(dt){
+      t += REDUCED ? 0 : dt;
+      pts.material.uniforms.uTime.value = t;
+      cam.position.x = lerp(cam.position.x, mx*3.4, 0.04);
+      cam.position.y = lerp(cam.position.y, -my*2.2, 0.04);
+      cam.lookAt(0,0,-30);
+      renderer.render(scene, cam);
+    }
+  };
+})();
+/* fade the void down once the hero scrolls away */
+gsap.to('#bgCanvas',{opacity:.26, ease:'none',
+  scrollTrigger:{trigger:'#hero', start:'top top', end:'bottom top', scrub:true}});
+
+/* ============================================================
+   SCENE I — THE MONOLITH (scroll-driven camera plunge)
+   ============================================================ */
+const mono = (()=>{
+  const canvas = qs('#monoCanvas'), vp = qs('#monoViewport');
+  const renderer = new THREE.WebGLRenderer({canvas, alpha:true, antialias:true});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x000000, 0.0105);
+  const cam = new THREE.PerspectiveCamera(55, 1, 0.1, 700);
+
+  const H = 140, W = 6;                       // $903 mapped to 140 world-units
+  const MEDIAN_H = H * (25/903);              // $25 → brutal little stub
+
+  /* monolith body */
+  const monoGeo = new THREE.BoxGeometry(W, H, W);
+  const monoMesh = new THREE.Mesh(monoGeo, new THREE.MeshBasicMaterial({color:0x000000}));
+  monoMesh.position.y = H/2; scene.add(monoMesh);
+  const edges = new THREE.LineSegments(
+    new THREE.EdgesGeometry(monoGeo),
+    new THREE.LineBasicMaterial({color:0xFF4F00, transparent:true, opacity:0.95}));
+  edges.position.copy(monoMesh.position); scene.add(edges);
+  const core = new THREE.Mesh(new THREE.BoxGeometry(W*0.72, H-1.5, W*0.72),
+    new THREE.MeshBasicMaterial({color:0xFF4F00, transparent:true, opacity:0.07,
+      blending:THREE.AdditiveBlending, depthWrite:false}));
+  core.position.copy(monoMesh.position); scene.add(core);
+
+  /* rising data bands — the column feels alive */
+  const bands = [];
+  for (let i=0;i<14;i++){
+    const b = new THREE.Mesh(new THREE.BoxGeometry(W+0.35, 0.22, W+0.35),
+      new THREE.MeshBasicMaterial({color: i%4===0 ? 0x00E5FF : 0xFF4F00,
+        transparent:true, opacity:0.5, blending:THREE.AdditiveBlending, depthWrite:false}));
+    const base = 6 + Math.random()*(H-14);
+    b.position.set(0, base, 0);
+    bands.push({m:b, base, sp: 2+Math.random()*5, ph: Math.random()*6.28, up: 1.4+Math.random()*2.6});
+    scene.add(b);
+  }
+
+  /* median stub */
+  const stubGeo = new THREE.BoxGeometry(W, MEDIAN_H, W);
+  const stub = new THREE.Mesh(stubGeo, new THREE.MeshBasicMaterial({color:0x000000}));
+  stub.position.set(22, MEDIAN_H/2, 0); scene.add(stub);
+  const stubE = new THREE.LineSegments(new THREE.EdgesGeometry(stubGeo),
+    new THREE.LineBasicMaterial({color:0x00E5FF, transparent:true, opacity:0.85}));
+  stubE.position.copy(stub.position); scene.add(stubE);
+
+  /* measurement rings */
+  const ringMat = new THREE.LineBasicMaterial({color:0xffffff, transparent:true, opacity:0.12});
+  [12, 42, 74, 106, 134].forEach(h=>{
+    const s = 5.6, pts = [
+      new THREE.Vector3(-s,h,-s), new THREE.Vector3(s,h,-s),
+      new THREE.Vector3(s,h,s),  new THREE.Vector3(-s,h,s), new THREE.Vector3(-s,h,-s)];
+    const r = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), ringMat);
+    scene.add(r);
+  });
+
+  /* floor grid + dust */
+  const grid = new THREE.GridHelper(600, 60, 0x2e2e2e, 0x151515);
+  grid.position.y = 0.01; scene.add(grid);
+  const dust = softPoints(innerWidth<768?250:520, [70,80,40], {minS:0.5, maxS:1.7, drift:2.2});
+  dust.position.set(0, 78, 0); scene.add(dust);
+
+  /* camera keyframes: summit → plunge → base → reveal the divide */
+  const KEYS = [
+    {p:0.00, pos:[ 14,168, 44], look:[  0,150,  0]},
+    {p:0.22, pos:[-16,120, 34], look:[  0,112,  0]},
+    {p:0.45, pos:[ 18, 64, 30], look:[  0, 58,  0]},
+    {p:0.70, pos:[-12, 16, 26], look:[  0, 14,  0]},
+    {p:0.86, pos:[  6,  6, 32], look:[  4, 14,  0]},
+    {p:1.00, pos:[ 70, 36,120], look:[ 11, 30,  0]}
+  ];
+  const vA = new THREE.Vector3(), vB = new THREE.Vector3(), L = new THREE.Vector3();
+
+  function cameraAt(p){
+    let a = KEYS[0], b = KEYS[KEYS.length-1];
+    for (let i=0;i<KEYS.length-1;i++)
+      if (p >= KEYS[i].p && p <= KEYS[i+1].p){ a=KEYS[i]; b=KEYS[i+1]; break; }
+    const t = smooth(Math.min(1, Math.max(0, (p-a.p)/(b.p-a.p || 1))));
+    cam.position.set(lerp(a.pos[0],b.pos[0],t) + Math.sin(p*9)*1.4,
+                     lerp(a.pos[1],b.pos[1],t),
+                     lerp(a.pos[2],b.pos[2],t));
+    L.set(lerp(a.look[0],b.look[0],t), lerp(a.look[1],b.look[1],t), lerp(a.look[2],b.look[2],t));
+    cam.lookAt(L);
+  }
+
+  /* altitude ruler */
+  const rInner = qs('#rulerInner');
+  const RH = 2400;
+  for (let v=900; v>=0; v-=50){
+    const d = document.createElement('div');
+    d.className = 'rtick'; d.style.top = ((900-v)/900*RH)+'px';
+    d.innerHTML = '<span>$'+v+'</span>';
+    rInner.appendChild(d);
+  }
+  const t903 = document.createElement('div');
+  t903.className='rtick hot'; t903.style.top='0px'; t903.innerHTML='<span>$903 — TOP 1%</span>';
+  rInner.appendChild(t903);
+  const t25 = document.createElement('div');
+  t25.className='rtick cold'; t25.style.top=((900-25)/900*RH)+'px'; t25.innerHTML='<span>$25 — MEDIAN</span>';
+  rInner.appendChild(t25);
+
+  let progress = 0, active = false, t = 0, vh = innerHeight;
+  function resize(){
+    const w = vp.clientWidth, h = vp.clientHeight;
+    vh = h;
+    renderer.setSize(w, h);
+    cam.aspect = w/h; cam.updateProjectionMatrix();
+  }
+  resize(); addEventListener('resize', resize);
+
+  return {
+    setActive(v){ active = v; },
+    setProgress(p){
+      progress = p;
+      rInner.style.transform = 'translate3d(0,' + (-(RH - vh) * p).toFixed(1) + 'px,0)';
+    },
+    render(dt){
+      if (!active) return;
+      t += REDUCED ? 0 : dt;
+      dust.material.uniforms.uTime.value = t;
+      bands.forEach(b=>{
+        if (!REDUCED){
+          b.m.position.y += b.up * dt;
+          if (b.m.position.y > H) b.m.position.y = 2;
+          b.m.material.opacity = 0.18 + 0.4 * Math.abs(Math.sin(t*b.sp + b.ph));
+        }
+      });
+      cameraAt(progress);
+      renderer.render(scene, cam);
+    }
+  };
+})();
+
+/* scrub trigger for the plunge */
+ScrollTrigger.create({
+  trigger:'#monoStage', start:'top top', end:'bottom bottom',
+  scrub:0.5,
+  onUpdate:self => mono.setProgress(self.progress)
+});
+ScrollTrigger.create({
+  trigger:'#monoStage', start:'top bottom', end:'bottom top',
+  onToggle:self => mono.setActive(self.isActive)
+});
+/* HTML overlay beats inside the plunge */
+gsap.timeline({defaults:{ease:'none'},
+  scrollTrigger:{trigger:'#monoStage', start:'top top', end:'bottom bottom', scrub:0.5}})
+  .to('#mHint',{autoAlpha:0, duration:.05}, 0)
+  .fromTo('#mL1',{autoAlpha:0, y:70},{autoAlpha:1, y:0, duration:.10}, .06)
+  .to('#mL1',{autoAlpha:0, y:-70, duration:.10}, .40)
+  .fromTo('#mL2',{autoAlpha:0, y:70},{autoAlpha:1, y:0, duration:.09}, .52)
+  .to('#mL2',{autoAlpha:0, y:-70, duration:.09}, .72)
+  .fromTo('#mL3',{autoAlpha:0, scale:.92},{autoAlpha:1, scale:1, duration:.12}, .80);
+
+/* ============================================================
+   SCENE II — THE STATE DIVIDE (cartogram)
+   ============================================================ */
+const STATE_NAMES = {AK:'ALASKA',ME:'MAINE',VT:'VERMONT',NH:'NEW HAMPSHIRE',WA:'WASHINGTON',
+ID:'IDAHO',MT:'MONTANA',ND:'NORTH DAKOTA',MN:'MINNESOTA',IL:'ILLINOIS',WI:'WISCONSIN',
+MI:'MICHIGAN',NY:'NEW YORK',MA:'MASSACHUSETTS',RI:'RHODE ISLAND',OR:'OREGON',NV:'NEVADA',
+WY:'WYOMING',SD:'SOUTH DAKOTA',IA:'IOWA',IN:'INDIANA',OH:'OHIO',PA:'PENNSYLVANIA',
+NJ:'NEW JERSEY',CT:'CONNECTICUT',CA:'CALIFORNIA',UT:'UTAH',CO:'COLORADO',NE:'NEBRASKA',
+MO:'MISSOURI',KY:'KENTUCKY',WV:'WEST VIRGINIA',VA:'VIRGINIA',MD:'MARYLAND',DE:'DELAWARE',
+AZ:'ARIZONA',NM:'NEW MEXICO',KS:'KANSAS',AR:'ARKANSAS',TN:'TENNESSEE',NC:'NORTH CAROLINA',
+SC:'SOUTH CAROLINA',DC:'DISTRICT OF COLUMBIA',OK:'OKLAHOMA',LA:'LOUISIANA',MS:'MISSISSIPPI',
+AL:'ALABAMA',GA:'GEORGIA',HI:'HAWAII',TX:'TEXAS',FL:'FLORIDA'};
+
+const STATES = [
+  ['AK',0,0,'O'],['ME',10,0,'O'],
+  ['VT',8,1,'O'],['NH',9,1,'O'],
+  ['WA',0,2,'O'],['ID',1,2,'O'],['MT',2,2,'A'],['ND',3,2,'O'],['MN',4,2,'O'],['IL',5,2,'O'],
+  ['WI',6,2,'O'],['MI',7,2,'O'],['NY',8,2,'O'],['MA',9,2,'A'],['RI',10,2,'O'],
+  ['OR',0,3,'O'],['NV',1,3,'O'],['WY',2,3,'O'],['SD',3,3,'O'],['IA',4,3,'O'],['IN',5,3,'O'],
+  ['OH',6,3,'O'],['PA',7,3,'O'],['NJ',8,3,'O'],['CT',9,3,'O'],
+  ['CA',0,4,'A'],['UT',1,4,'O'],['CO',2,4,'O'],['NE',3,4,'O'],['MO',4,4,'O'],['KY',5,4,'O'],
+  ['WV',6,4,'O'],['VA',7,4,'O'],['MD',8,4,'O'],['DE',9,4,'O'],
+  ['AZ',0,5,'O'],['NM',1,5,'O'],['KS',2,5,'O'],['AR',3,5,'O'],['TN',4,5,'O'],['NC',5,5,'O'],
+  ['SC',6,5,'O'],['DC',7,5,'A'],
+  ['OK',2,6,'O'],['LA',3,6,'O'],['MS',4,6,'O'],['AL',5,6,'O'],['GA',6,6,'O'],
+  ['HI',0,7,'O'],['TX',2,7,'O'],['FL',7,7,'O']
+];
+const ENCLAVE_NOTES = {
+  CA:'HOMELAND TERRITORY — the enclave that funds the frontier. Densest premium demand in the country.',
+  MA:'ACADEMIC CORRIDOR — enterprise-grade adoption radiating out of the university belt.',
+  MT:'THE ANOMALY — low population, outsized spend share. A genuine statistical rupture.',
+  DC:'POLICY EPICENTER — institutional, high-budget demand concentrated in the capital.'
+};
+const OPENAI_NOTE = 'PART OF THE 47-STATE DEFAULT FOOTPRINT — OPENAI LEADS MERCHANT SPEND HERE.';
+
+const grid = qs('#stateGrid'), panel = qs('#stPanel');
+const spCode = qs('#spCode'), spState = qs('#spState'), spLeader = qs('#spLeader'), spNote = qs('#spNote');
+
+STATES.forEach(([code,c,r,leader])=>{
+  const t = document.createElement('div');
+  t.className = 'tile t-' + leader;
+  t.textContent = code;
+  t.style.gridColumnStart = c+1;
+  t.style.gridRowStart = r+1;
+  t.setAttribute('data-hover','');
+  const enter = ()=>{
+    qsa('.tile.sel').forEach(x=>x.classList.remove('sel'));
+    t.classList.add('sel');
+    panel.classList.add('live');
+    spCode.textContent = '// ' + code + ' — MERCHANT SPEND LEADER';
+    spState.textContent = STATE_NAMES[code];
+    if (leader === 'A'){
+      spLeader.className = 'sp-leader A';
+      spLeader.textContent = 'ANTHROPIC — HIGH-YIELD ENCLAVE';
+      spNote.textContent = ENCLAVE_NOTES[code];
+    } else {
+      spLeader.className = 'sp-leader O';
+      spLeader.textContent = 'OPENAI — MERCHANT SPEND LEADER';
+      spNote.textContent = OPENAI_NOTE;
+    }
+  };
+  t.addEventListener('pointerenter', enter);
+  t.addEventListener('click', enter);
+  grid.appendChild(t);
+  if (!TOUCH) springify(t, 1.28, 0.16, 0.68);
+});
+
+/* ============================================================
+   SCENE III — TIER PRISM (bars + tooltip)
+   ============================================================ */
+const SCALE_MAX = 8;
+gsap.fromTo('.tier-fill',{scaleX:0},{
+  scaleX:(i,el)=> +el.dataset.pct / SCALE_MAX,
+  duration:1.6, ease:'power4.inOut',
+  scrollTrigger:{trigger:'.prism', start:'top 62%'}
+});
+gsap.fromTo('.lc-fill',{scaleX:0},{
+  scaleX:(i,el)=> +el.dataset.pct / 100,
+  duration:1.7, ease:'power4.inOut',
+  scrollTrigger:{trigger:'.launch-grid', start:'top 68%'}
+});
+
+const tip = qs('#prismTip'), ttM = qs('#ttModel'), ttP = qs('#ttPlan'),
+      ttB = qs('#ttBig'), ttN = qs('#ttNote');
+qsa('.tier-row').forEach(row=>{
+  row.addEventListener('pointerenter', ()=>{
+    ttM.textContent = row.dataset.model;
+    ttP.textContent = row.dataset.plan;
+    ttB.textContent = row.dataset.pct + ' OF SUBSCRIBERS CONVERT TO THE PREMIUM TIER';
+    ttN.textContent = row.dataset.note;
+    tip.classList.add('on');
+  });
+  row.addEventListener('pointermove', e=>{
+    const w = tip.offsetWidth, h = tip.offsetHeight;
+    tip.style.left = Math.min(e.clientX + 22, innerWidth  - w - 14) + 'px';
+    tip.style.top  = Math.min(e.clientY + 22, innerHeight - h - 14) + 'px';
+  });
+  row.addEventListener('pointerleave', ()=> tip.classList.remove('on'));
+  if (!TOUCH) springify(row, 1.012, 0.18, 0.7);
+});
+
+/* ============================================================
+   SCENE V — LAUNCH DIVERGENCE (the split)
+   ============================================================ */
+gsap.to('#divL',{x:'-7vw', ease:'none',
+  scrollTrigger:{trigger:'#scn-launch', start:'top 55%', end:'bottom bottom', scrub:true}});
+gsap.to('#divR',{x:'7vw', ease:'none',
+  scrollTrigger:{trigger:'#scn-launch', start:'top 55%', end:'bottom bottom', scrub:true}});
+
+/* ============================================================
+   GLOBAL CHOREOGRAPHY
+   ============================================================ */
+/* scramble headings on entry */
+qsa('.scr').forEach(el=>{
+  if (el.closest('#hero')) return;
+  const s = new Scrambler(el);
+  ScrollTrigger.create({trigger:el, start:'top 86%', once:true,
+    onEnter:()=> s.run(0, 800 + (el.dataset.text||'').length * 16)});
+});
+/* count-ups on entry (hero excluded — fired by intro) */
+qsa('.cnt').forEach(el=>{
+  ScrollTrigger.create({trigger:el, start:'top 88%', once:true, onEnter:()=> countUp(el)});
+});
+/* progress bar */
+ScrollTrigger.create({
+  start:0, end:()=> ScrollTrigger.maxScroll(window),
+  onUpdate:self => gsap.set('#progress',{scaleX:self.progress})
+});
+/* scene rail + HUD */
+const SCENES = [
+  ['#hero','00 · APEX','HERO'],
+  ['#scn-monolith','01 · MONOLITH','THE MONOLITH'],
+  ['#scn-states','02 · STATES','THE STATE DIVIDE'],
+  ['#scn-prism','03 · PRISM','THE TIER PRISM'],
+  ['#scn-agents','04 · AGENTS','AGENT VELOCITY'],
+  ['#scn-launch','05 · LAUNCH','LAUNCH DIVERGENCE'],
+  ['#eof','06 · EOF','END OF FILE']
+];
+const rail = qs('#rail'), hudName = qs('#hudName');
+SCENES.forEach(([sel,label,name])=>{
+  const b = document.createElement('button');
+  b.innerHTML = '<i></i><span>'+label+'</span>';
+  b.setAttribute('data-hover','');
+  b.addEventListener('click', ()=> qs(sel).scrollIntoView({behavior: REDUCED?'auto':'smooth'}));
+  rail.appendChild(b);
+  ScrollTrigger.create({
+    trigger:sel, start:'top center', end:'bottom center',
+    onToggle:self=>{
+      b.classList.toggle('on', self.isActive);
+      if (self.isActive) hudName.textContent = name;
+    }
+  });
+});
+/* springify remaining interactive elements */
+qsa('.spring,[data-hover]').forEach(el=>{ if (!el.classList.contains('tile')) springify(el, 1.03, 0.15, 0.7); });
+
+/* ============================================================
+   HERO INTRO — kinetic assembly
+   ============================================================ */
+function intro(){
+  const chrome = gsap.timeline({defaults:{ease:'power3.out'}});
+  chrome.from('#topbar',{yPercent:-120, duration:.9}, 0)
+        .from('#hud',{yPercent:120, autoAlpha:0, duration:.9}, .1)
+        .from('#rail',{x:30, autoAlpha:0, duration:.9}, .2);
+
+  new Scrambler(qs('#hKick')).run(250, 1100);
+  gsap.from('#heroTitle',{filter:'blur(20px)', scale:1.06, autoAlpha:0, duration:1.3, ease:'power3.out', delay:.5});
+  new Scrambler(qs('#heroTitle')).run(500, 1500);
+  new Scrambler(qs('#hSub')).run(1400, 1200);
+  gsap.to('#hLede',{autoAlpha:1, y:0, duration:1, delay:2.05, startAt:{y:24}});
+  qsa('.cnt-hero').forEach((el,i)=> setTimeout(()=> countUp(el), 2300 + i*160));
+}
+if (document.readyState === 'complete') intro();
+else addEventListener('load', intro);
+
+/* fonts can shift layout — re-measure triggers */
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(()=> ScrollTrigger.refresh());
+
+/* ============================================================
+   MASTER RENDER LOOP
+   ============================================================ */
+let last = performance.now();
+(function loop(now){
+  requestAnimationFrame(loop);
+  const dt = Math.min(0.05, (now - last)/1000); last = now;
+  if (document.hidden) return;
+  bg.render(dt);
+  mono.render(dt);
+  cursor.update();
+})(last);
+
+})();
+</script>
+</body>
+</html>
